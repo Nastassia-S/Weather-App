@@ -1,0 +1,44 @@
+.weatherApp {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    background-color: #c5d5f5;
+    height: 100vh;
+}
+
+.title {
+    color: #2f77d3;
+}
+
+.input {
+    border-radius: 15px;
+    padding: 10px 10px;
+    border: 1px solid #2f77d3;
+    background-color: #FFFFF0;
+    font-size: 20px;
+    color: #565555;
+}
+
+.error {
+    margin-top: 10px;
+    color: #cc1b1b;
+    font-weight: bold;
+}
+
+.table {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    font-size: 18px;
+}
+
+.item {
+    margin-bottom: 10px;
+    font-size: 20px;
+    color: #565555;
+    font-weight: bold;
+    font-style: italic;
+}
+
+
