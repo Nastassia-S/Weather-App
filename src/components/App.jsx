@@ -1,43 +1,21 @@
 import React from "react";
 import {debounce} from "lodash";
 import css from "./styles.module.css";
-import {getCurrentWeather} from "../api";
-import {LOAD_STATUSES} from "../constants";
 import {Loader} from "./common";
 import {WeatherTable} from "./WeatherTable";
+import {connect} from "react-redux";
+import {WeatherSelectors, WeatherAC} from "../api/store";
 
-export class App extends React.Component {
+export class AppOriginal extends React.Component {
     state = {
         city: '',
-        data: {},
-        loadStatus: LOAD_STATUSES.UNKNOWN,
-        // timer: 0,
-    }
+    };
 
-    // timerID = null;
+    fetchWeatherDebounced = debounce(this.props.getWeather, 1000);
 
-    fetchWeather = (params) => {
-        this.setState({loadStatus: LOAD_STATUSES.LOADING})
-
-        getCurrentWeather(params)
-            .then(({main, weather}) => {
-                this.setState({loadStatus: LOAD_STATUSES.LOADED, data: {...main, icon: weather[0].icon}})
-            }).catch(() => {
-            this.setState({loadStatus: LOAD_STATUSES.ERROR, data: {}})
-        });
-    }
-
-    fetchWeatherDebounced = debounce(this.fetchWeather, 1000);
-
-    // shouldComponentUpdate(nextProps, nextState, nextContext) {
-    //     return nextState.city !== this.state.city || nextState.loadStatus !== this.state.loadStatus || nextState.data !== this.state.data;
-    // }
-
+    //
     // componentDidMount() {
-    //     this.fetchWeather({city: this.state.city});
-    //     this.timerId = setInterval(() => {
-    //     this.setState((prev) => ({timer: prev.timer + 1}))
-    //     }, 1500);
+    //     this.props.getWeather(this.state.city);
     // }
 
     componentDidUpdate(_, prevState) {
@@ -46,22 +24,40 @@ export class App extends React.Component {
         }
     }
 
-    // componentWillUnmount() {
-    //     if (this.timerID) {
-    //         clearInterval(this.timerID);
-    //     }
-    // }
-
     render() {
-        return <div className={css.weatherApp}>
-            <h1 className={css.title}>Please enter a city</h1>
-            <input className={css.input} placeholder={`Search for...`} value={this.state.city}
-                   onChange={(event) => this.setState({city: event.target.value})}/>
-            {this.state.loadStatus === LOAD_STATUSES.LOADING && <Loader/>}
-            {this.state.loadStatus === LOAD_STATUSES.ERROR && <span className={css.error}>Please try again later</span>}
-            {this.state.loadStatus === LOAD_STATUSES.LOADED && (
-                <WeatherTable {...this.state.data}/>
-            )}
-        </div>
+        const {city} = this.state;
+        const values = [
+            {label: "Current temperature", value: `${this.props.data.temp} °C`},
+            {label: "Feels like", value: `${this.props.data.feels_like} °C`},
+            {label: "Min temperature", value: `${this.props.data.temp_min} °C`},
+            {label: "Max temperature", value: `${this.props.data.temp_max} °C`},
+        ];
+        const {isLoading, isLoaded, isError} = this.props;
+
+        return (
+            <div className={css.weatherApp}>
+                <h1 className={css.title}>Please enter a city</h1>
+                <input className={css.input} placeholder={`Search for...`} value={city}
+                       onChange={(event) => this.setState({city: event.target.value})}/>
+                {isLoading && <Loader/>}
+                {isError && <span className={css.error}>Please try again later</span>}
+                {isLoaded && <WeatherTable values={values}/>}
+            </div>
+        );
     }
 }
+
+const mapStateToProps = (state) => {
+    return {
+        data: WeatherSelectors.getWeather(state),
+        isLoading: WeatherSelectors.isLoading(state),
+        isLoaded: WeatherSelectors.isLoaded(state),
+        isError: WeatherSelectors.isError(state),
+    };
+};
+
+const mapDispatchToProps = (dispatch) => ({
+    getWeather: (city) => dispatch(WeatherAC.fetchWeather(city)),
+});
+
+export const App = connect(mapStateToProps, mapDispatchToProps)(AppOriginal);
